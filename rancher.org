@@ -1,0 +1,7 @@
+* rancher学习笔记
+** 安装过程
+  + 修改config.rb 增加这样一行$forwarded_ports = { 8888 => 8888 } 这个是把虚拟机映射到实体机端口
+  + 执行docker pull rancher/server 拉取镜像
+  + 执行docker run -d --restart=always -p 8888:8080 rancher/server 运行rancher 8888外网端口自己可以修改
+  + 执行docker ps 可以看到信息执行信息
+  + 然后到实体机 浏览器执行127.0.0.1:8888可以看到rancher的信息了。
