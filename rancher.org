@@ -5,3 +5,7 @@
   + 执行docker run -d --restart=always -p 8888:8080 rancher/server 运行rancher 8888外网端口自己可以修改
   + 执行docker ps 可以看到信息执行信息
   + 然后到实体机 浏览器执行127.0.0.1:8888可以看到rancher的信息了。
+** 首先用fleet配置rancher服务启动过程以及客户端的注册过程
+ + 为了方便吗查看集群主机信息在user-data文件中fleet块后添加    metadata: region=china,private-ip=$private_ipv4
+ + 然后启动集群使用fleet list-mechines查看集群信息
+ + 后续就是通过fleet配置coreos集群 初始化启动过程了（后续内容随着进展逐步补充）
