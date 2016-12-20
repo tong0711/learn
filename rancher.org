@@ -9,3 +9,8 @@
  + 为了方便吗查看集群主机信息在user-data文件中fleet块后添加    metadata: region=china,private-ip=$private_ipv4
  + 然后启动集群使用fleet list-mechines查看集群信息
  + 后续就是通过fleet配置coreos集群 初始化启动过程了（后续内容随着进展逐步补充）
+** 六台虚拟机目前规划说明
+   + 1 作为rancher 或者consul的配置机器 consul可以考虑单独放到机器2
+   + 2 作为ngix或者vancland 负载均衡器的机器
+   + 3 可以作为负载均衡器的双机热备
+   + 4 5 6 就是跑具体服务的机器 通过docker运行 ，使用consul做配置管理，使用rancher做管理。
