@@ -1,0 +1,99 @@
+*  elk 配置安装学习笔记
+** elk简介
+   本次对elk的探索 ，因为是调研所以本次elk的服务端安装环境还是使用windows。
+   日志主要包括系统日志、应用程序日志和安全日志。系统运维和开发人员可以通过日志了解服务器软硬件信息、
+   检查配置过程中的错误及错误发生的原因。经常分析日志可以了解服务器的负荷，性能安全性，从而及时采取措施纠正错误。
+   通常，日志被分散的储存不同的设备上。如果需要管理数十上百台服务器，必须依次登录每台机器的传统方法查阅日志，
+   这样很繁琐和效率低下。当务之急是使用集中化的日志管理，开源实时日志分析ELK平台能够完美的解决上述所提到的问题。
+** elk 安装与配置
+   ELK由ElasticSearch（ES）、Logstash和Kiabana三个开源工具组成。
+   ES是个开源分布式搜索引擎，它的特点有：分布式，零配置，自动发现，索引自动分片，
+   索引副本机制，restful风格接口，多数据源，自动搜索负载等，最重要的是近实时搜索。
+   Logstash是一个完全开源的工具，可以对日志进行收集、分析、并将其存储供以后使用。
+   kibana也是一个开源和免费的工具，他Kibana可以为Logstash和ES提供的日志分析友好的Web界面，可以帮助您汇总、
+   分析和搜索重要数据日志
+*** 软件下载
+   elsticsearch 5.1.1，kibana 5.1.1，logstash 5.1.1
+*** 软件安装
+    将以上三款软件解压缩到一个非中文，名称无空格的目录中即可。
+    以上软件解压缩完成后 按照es，log，kib顺序启动。
+*** 软件运行与验证y
+**** 启动elastic
+     到elastic的安装目录中的bin目录里边执行elaxxxx.bat文件即可
+     这里不需要特殊配置。
+     验证是否成功可以执行http://localhost:9200 进行查看如果看到json输出
+     即成功。下边是JSON输出样例
+     # +BEGIN_SRC
+     {
+        "name" : "ls7eVf1",
+        "cluster_name" : "elasticsearch",
+        "cluster_uuid" : "0LugXec8SUGRRdeN_I5IrA",
+        "version" : {
+           "number" : "5.1.1",
+           "build_hash" : "5395e21",
+           "build_date" : "2016-12-06T12:36:15.409Z",
+           "build_snapshot" : false,
+           "lucene_version" : "6.3.0"
+        },
+        "tagline" : "You Know, for Search"
+     }
+     # +END_SRC
+*** 配置启动logstash
+    这里使用了一个redis作为信息传送代理所有的日志信息都通过redis进行中转。
+    logstash 中央代理配置
+     # +BEGIN_SRC
+     input {
+        redis {
+                host => "127.0.0.1"
+                port => 6379
+                type => "redis-input"
+                data_type => "list"
+                key => "key_count"
+        }
+}
+
+
+     output {
+        stdout {}
+        elasticsearch {
+                hosts => ["127.0.0.1:9200"]
+                codec => "json"
+
+        }
+        }
+     # +END_SRC
+     启动脚本
+      # +BEGIN_SRC
+       d:/developer/elk/logstash-5.1.1/bin/logstash.bat   -f d:\developer\elk\logstash.conf
+      # +END_SRC
+*** 启动kibana
+到kibana安装目录找到config目录下的kibana.yml。目前仅仅修改elasticserarch.url这个属性修改为实际数值就ok
+然后到bin执行kibana.bat 。启动后查看http://localhost:5601 就ok了。
+*** 启动一个logstash的代理
+    启动一个logstash代理 通过redis上传日志。
+    # +BEGIN_SRC
+    input {
+        file {
+                type => "type_count"
+                path => ["D:/developer/java_tools/apache-tomcat-8.5.9/logs/*.log"]
+                exclude => ["*.gz", "access.log"]
+        }
+    }
+
+    output {
+        stdout {}
+        redis {
+                host => "127.0.0.1"
+                port => 6379
+                data_type => "list"
+                key => "key_count"
+        }
+    }
+    # +END_SRC
+    启动脚本
+     d:/developer/elk/logstash-5.1.1/bin/logstash.bat   -f d:\developer\elk\logstash_agent.conf
+***  以上工作都完成后
+    到http://localhost:5061 里边的discovery查看就可以看到日志了
+** elk 对.net与windows的日志分析兼容性
+   今天还没有看详细的日志。 另外也没有详细研究logstash对于日志分析部分的功能。
+** 使用建议
