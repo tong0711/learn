@@ -13,11 +13,17 @@
    kibana也是一个开源和免费的工具，他Kibana可以为Logstash和ES提供的日志分析友好的Web界面，可以帮助您汇总、
    分析和搜索重要数据日志
 *** 软件下载
-   elsticsearch 5.1.1，kibana 5.1.1，logstash 5.1.1
+   elsticsearch 5.1.1，kibana 5.1.1，logstash 5.1.1 ，xpack5.1.1（这个是权限和增加新功能的插件
+   ，因为网络问题最后还是直接下载了）
 *** 软件安装
     将以上三款软件解压缩到一个非中文，名称无空格的目录中即可。
-    以上软件解压缩完成后 按照es，log，kib顺序启动。
-*** 软件运行与验证y
+    以上软件解压缩完成后 按照es，log，kib顺序启动。xpack包不用解开亚索
+*** 软件运行与验证
+    这个部分的内容都是在windows中的安装。真正的配置安装应在linux
+    这次测试直接是使用redis作为log代理，这里也可以使用kafka。redis相对简单并且也满足当前实际需要了。
+    另外这次选用的是最新的5.1.1版本。目前网络上的资料配置文件部分，还是要以最新的官方文档为准。 我最后
+    还是看官方文档解决的问题。
+
 **** 启动elastic
      到elastic的安装目录中的bin目录里边执行elaxxxx.bat文件即可
      这里不需要特殊配置。
@@ -52,12 +58,15 @@
         }
 }
 
+     user 和password 是通过xpack包配置的用户
 
      output {
         stdout {}
         elasticsearch {
                 hosts => ["127.0.0.1:9200"]
                 codec => "json"
+                user=>"logstash"
+                password=>"1q2w3e4r"
 
         }
         }
@@ -94,6 +103,28 @@
      d:/developer/elk/logstash-5.1.1/bin/logstash.bat   -f d:\developer\elk\logstash_agent.conf
 ***  以上工作都完成后
     到http://localhost:5061 里边的discovery查看就可以看到日志了
+** elk 的权限控制
+   默认情况 三个组件均无权限控制，logstash是内网无此问题。但是 el和kibana必须要有权限控制
+   权限控制官方提供xpack包。
+   下边分别对 el和ki安装xpack
+*** 在线安装
+    真慢啊，最后放弃了。
+   + elasticsearch-plugin install x-pack
+   + kibana-plugin install x-pack
+*** 离线安装
+   + 首先下载xpack5.1.1的包。https://artifacts.elastic.co/downloads/packs/x-pack/x-pack-5.1.1.zip
+   + 安装elastic的插件 kibana-plugin install file:///path/to/file/x-pack-5.1.1.zip （注意file:后边跟着3个/） 。
+   + 安装kibana-plugin install  file://d:/developer/elk/x-pack-5.1.1.zip（注意到这里就是他妈的后边file:2个/）
+*** 安装完成后操作
+    使用默认的用户 elastic和默认密码changme登录。首先修改密码。然后添加logstash的用户。并且把这个用户配置到logstash主agent上去。
+
 ** elk 对.net与windows的日志分析兼容性
-   今天还没有看详细的日志。 另外也没有详细研究logstash对于日志分析部分的功能。
-** 使用建议
+    这个部门如果要求不高可用直接收集，如果要求高的话并且格式logstash不能直接解析，可用自行写个解析插件。
+** 架构方面
+首先log集群我建议 部署两台redis 服务器做主从热备，redis的内存要大，主logstash agent可用部署两个也可以一个。
+如果系统支持systemd配置的话 我建议部署一个就可以使用systemd 监控logstash进程发现终止重启就好了。
+如果还是老的init那就需要 自己写个cron运行脚本监控logstash进程。
+elasticsearch，按需配置集群或单机均可。 kibana配置在其中一台elasticsearch上即可。
+
+客户机方面最好是使用systemd监控logstash进程就可以了。如果还是老的init那就需要 自己写个cron运行脚本监控logstash进程。
+最后客户机的logstash配置最好从consul或者etcd这样配置工具获取。
