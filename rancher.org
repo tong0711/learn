@@ -1,5 +1,7 @@
 * rancher学习笔记
 ** 安装过程
+  + 需要修改vagrantfile ,在循环虚拟机前增加config.vm.network :public_network（这个是通知virtual 使用bridge网络模式）
+  + 继续修改vagrantfile，注释掉原有的network设置
   + 修改config.rb 增加这样一行$forwarded_ports = { 8888 => 8888 } 这个是把虚拟机映射到实体机端口
   + 执行docker pull rancher/server 拉取镜像
   + 执行docker run -d --restart=always -p 8888:8080 rancher/server 运行rancher 8888外网端口自己可以修改
@@ -14,4 +16,34 @@
    + 1 作为rancher 或者consul的配置机器 consul可以考虑单独放到机器2
    + 2 作为ngix或者vancland 负载均衡器的机器
    + 3 可以作为负载均衡器的双机热备
-   + 4 5 6 就是跑具体服务的机器 通过docker运行 ，使用consul做配置管理，使用rancher做管理。
+   + 4 5  就是跑具体服务的机器 通过docker运行 ，使用consul做配置管理，使用rancher做管理。
+   + 6 运行docker register (docker run -d --restart=always -e SETTINGS_FLAVOR=dev -e     STORAGE_PATH=/tmp/registry -v /opt/data/registry:/tmp/registry  -p 5000:5000 registry)
+     同时在6 上还跑个jenkins？；
+    sudo  docker run -p 8888:8080 --name=jenkins-master -d --restart=always -v /opt/data/jenkins_home_docker:/var/jenkins_home --env DOCKER_HOST=tcp://10.0.2.15:2375  --env JAVA_OPTS="-Xmx1024m" jenkins
+     http://192.168.3.202:8888  jenkins的访问地址。
+sudo chown -R 1000 data 这里要赋予jenkins docker权限。
+sudo  docker run -p 8888:8080 --name=jenkins-master -d --restart=always -v /opt/data/jenkins_home_docker:/var/jenkins_home --env DOCKER_HOST=tcp://192.168.3.202:2375  --env JAVA_OPTS="-Xmx1024m" jenkins
+sudo cp /usr/lib/systemd/system/docker.service /etc/systemd/system
+DOCKER_OPTS="--insecure-registry 192.168.3.202:5000"
+sudo systemctl daemon-reload
+sudo systemctl restart docker
+sudo vi  /etc/systemd/system/docker.service
+
+当spring boot整合actuor包后 调用xxx/shutdown包 可关闭应用 ，把这个功能和
+rancher整合后可以做到平滑部署。
+
+rancher 采用host service container的 meta flag控制service和容器的部署调度。
+** ranhcer部署实践
+  网络voverlayer层是需要的。具体到实践中鉴于本公司网络没有跨公网多机房的需求，
+  ipsec的加密特性帮助不大，带来多于网络损耗大 。使用vxlan代替。vxlan目前还没有测试
+** 后续工作
+   + 抽取原1.0系统的数据库访问和共用api为一个jar，供后续微服务使用
+   + 抽取原1.0系统的权限系统为一个独立服务应用使用springcoud开发
+   + 按照现在华为云实际主机情况设计部署到落地方案
+   + 新金融系统采用微服务新架构开发
+   + 采用zuul作为服务代理，并且集成权限校验。后续增加ab部署功能
+   + 修改使用vxlan 网络overlayer层
+   + 确定日志收集的方式了但是容器收集日志还没有进行测试。
+** 二期实现
+   + 整合rancher的updagrae和springboot以及zuul做到zb部署 ，平滑上下线
+   + 整合racher和springboot acutor包做到完成应用集群管理与监控

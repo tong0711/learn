@@ -115,7 +115,7 @@
    + kibana-plugin install x-pack
 *** 离线安装
    + 首先下载xpack5.1.1的包。https://artifacts.elastic.co/downloads/packs/x-pack/x-pack-5.1.1.zip
-   + 安装elastic的插件 kibana-plugin install file:///path/to/file/x-pack-5.1.1.zip （注意file:后边跟着3个/） 。
+   + 安装elastic的插件 elastic-plugin install file:///path/to/file/x-pack-5.1.1.zip （注意file:后边跟着3个/） 。
    + 安装kibana-plugin install  file://d:/developer/elk/x-pack-5.1.1.zip（注意到这里就是他妈的后边file:2个/）
 *** 安装完成后操作
     使用默认的用户 elastic和默认密码changme登录。首先修改密码。然后添加logstash的用户。并且把这个用户配置到logstash主agent上去。
